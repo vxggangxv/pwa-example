@@ -80,6 +80,8 @@
   /*========== TODO: 아래에 Push 관련 로직 구현 ========== */
   // 구독 버튼 상태 갱신
   function updateButton () {
+    const pushButton = document.getElementById('subscribe')
+    
     // TODO: 알림 권한 거부 처리
     if (Notification.permission === 'denied') {
       pushButton.textContent = 'Push Messaging Blocked';
@@ -88,7 +90,6 @@
       return;
     }
 
-    const pushButton = document.getElementById('subscribe')
     if (isSubscribed) {
       pushButton.textContent = 'Disable Push Messaging';
     } else {

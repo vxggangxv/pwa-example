@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  let appServerPublicKey = '<YOUR_KEY>';
+  let appServerPublicKey = 'BNXbkNgnlJX_GH7PMqaD0yuEJkPIka9azOps78xZ82NcnOZsrm7W4DTRTOEfMFjsNBk9PzDPUugYleRTlwwnkFI';
   let isSubcribed = false; 
   let swRegist = null;
 
@@ -80,18 +80,49 @@
   /*========== TODO: 아래에 Push 관련 로직 구현 ========== */
   // 구독 버튼 상태 갱신
   function updateButton () {
+    // TODO: 알림 권한 거부 처리
 
+    const pushButton = document.getElementById('subscribe');
+    if (isSubcribed) {
+      pushButton.textContent = 'Disable Push Messaging';
+    } else {
+      pushButton.textContent = 'Enable Push Messaging'
+    }
+
+    pushButton.disabled = false;
   }
 
   // 구독 정보 갱신
   function updateSubscription (subscription) {
     // TODO: 구독 정보 서버로 전송
 
+    let detailArea = document.getElementById('subscription_detail');
+
+    if (subscription) {
+      detailArea.innerText = JSON.stringify(subscription);
+      detailArea.parentElement.classList.remove('hide');
+    } else {
+      detailArea.parentElement.classList.add('hide');
+    }
   }
 
   // 알림 구독
   function subscribe () {
-
+    const applicationServerKey = urlB64ToUint8Array(appServerPublicKey);
+    swRegist.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: appServerPublicKey
+    })
+    .then(subscription => {
+      console.log('User is subscribed.');
+      updateSubscription(subscription);
+      isSubscribed = true;
+      updateButton();
+    })
+    .catch(err => {
+      console.log('Failed to subscribe the user: ', err);
+      updateButton();
+    })
   }
 
   // 알림 구독 취소
@@ -101,7 +132,29 @@
 
   // Push 초기화
   function initPush () {
+    const pushButton = document.getElementById('subscribe');
+    pushButton.addEventListener('click', () => {
+      if (isSubcribed) {
+        // 구독 취소 처리
+      } else {
+        subscribe();
+      }
+    });
 
+    swRegist.pushManager.getSubscription()
+      .then(function(subscription) {
+        isSubcribed = !(subscription === null);
+        updateSubscription(subscription);
+
+        if (isSubcribed) {
+          console.log('User is subscribed.');
+        } else {
+          console.log('User is Not subscribed.');
+        }
+
+        updateButton();
+        
+      });
   }
 
 
@@ -112,6 +165,7 @@
       console.log('Service Worker Registered');
 
       // TODO: Push 기능 초기화
+      initPush();
 
       regist.addEventListener('updatefound', () => {
         const newWorker = regist.installing;
